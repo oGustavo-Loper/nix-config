@@ -6,6 +6,10 @@
 
   home.stateVersion = "25.05";
 
+  home.file.".fehbg".text = ''
+    feh --randomize --bg-fill ~/nix-config/assets/wallpapers/*
+  '';
+
   programs.home-manager.enable = true;
 
   ########################################
@@ -31,6 +35,10 @@
     config = {
       modifier = "Mod4";
       terminal = "rio";
+
+      startup = [
+        { command = "~/.fehbg"; always = true; }
+      ];
 
       keybindings = {
         "Mod4+d" = "exec rofi -show drun";
