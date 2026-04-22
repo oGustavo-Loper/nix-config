@@ -32,10 +32,6 @@
       modifier = "Mod4";
       terminal = "rio";
 
-      startup = [
-        { command = "~/.fehbg"; always = true; }
-      ];
-
       keybindings = {
         "Mod4+d" = "exec rofi -show drun";
       };
