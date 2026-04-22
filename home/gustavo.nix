@@ -6,10 +6,6 @@
 
   home.stateVersion = "25.05";
 
-  home.file.".fehbg".text = ''
-    feh --randomize --bg-fill ~/nix-config/assets/wallpapers/*
-  '';
-
   programs.home-manager.enable = true;
 
   ########################################
