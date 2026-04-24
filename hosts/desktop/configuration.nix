@@ -15,8 +15,6 @@
 
   networking.hostName = "desktop";
 
-  services.xserver.windowManager.i3.enable = true;
-
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 }

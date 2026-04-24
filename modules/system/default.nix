@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ lib, ... }:
 
 {
   nixpkgs.config.allowUnfree = true;
@@ -26,5 +26,5 @@
 
   boot.kernelModules = [ "kvm" ];
 
-  system.stateVersion = "24.05";
+  system.stateVersion = lib.mkDefault "24.05";
 }
