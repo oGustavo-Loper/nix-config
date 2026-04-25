@@ -1,10 +1,109 @@
-{ config, ... }:
+{ lib, pkgs, ... }:
 
 let
   mod = "Mod4";
-  wallpaper = "${config.home.homeDirectory}/nix-config/assets/wallpapers/001.jpg";
+  workspaceNumbers = [ "1" "2" "3" "4" "5" "6" "7" "8" "9" "10" ];
+  workspaceKeys = [ "1" "2" "3" "4" "5" "6" "7" "8" "9" "0" ];
+  monitorLayouts = [
+    {
+      output = "HDMI-0";
+      mode = "1920x1080";
+      rotate = "left";
+      pos = "0x180";
+      primary = false;
+    }
+    {
+      output = "DP-0";
+      mode = "3440x1440";
+      rotate = "normal";
+      pos = "1080x0";
+      primary = true;
+    }
+  ];
+  workspaceOutputAssign = [
+    {
+      workspace = "1";
+      output = "DP-0";
+    }
+    {
+      workspace = "2";
+      output = "HDMI-0";
+    }
+  ];
+  wallpaperDir = ../../assets/wallpapers;
+  randomWallpaperScript = pkgs.writeShellScript "set-random-wallpaper" ''
+    wallpapers="${
+      wallpaperDir
+    }"
+    wallpaper="$(${pkgs.findutils}/bin/find "$wallpapers" -maxdepth 1 -type f \( -name '*.jpg' -o -name '*.png' \) | ${pkgs.coreutils}/bin/shuf -n 1)"
+
+    if [ -n "$wallpaper" ]; then
+      exec ${pkgs.feh}/bin/feh --bg-fill "$wallpaper"
+    fi
+  '';
+  monitorCommand =
+    monitor:
+    let
+      primaryFlag = if monitor.primary then " --primary" else "";
+    in
+    "xrandr --output ${monitor.output}${primaryFlag} --mode ${monitor.mode} --rotate ${monitor.rotate} --pos ${monitor.pos}";
+  workspaceBindings =
+    builtins.listToAttrs (
+      lib.flatten (
+        lib.zipListsWith
+          (key: workspace: [
+            {
+              name = "${mod}+${key}";
+              value = "workspace ${workspace}";
+            }
+            {
+              name = "${mod}+Shift+${key}";
+              value = "move container to workspace ${workspace}";
+            }
+          ])
+          workspaceKeys
+          workspaceNumbers
+      )
+    );
 in
 {
+  home.packages = with pkgs; [
+    feh
+    i3status-rust
+    rofi
+    rio
+    setxkbmap
+    ulauncher
+    xrandr
+  ];
+
+  programs.i3status-rust = {
+    enable = true;
+
+    bars = {
+      default = {
+        settings = {
+          theme = {
+            theme = "dracula";
+          };
+
+          icons = "awesome6";
+
+          blocks = [
+            { block = "cpu"; }
+            { block = "memory"; }
+            { block = "disk_space"; path = "/"; }
+            {
+              block = "time";
+              interval = 60;
+              format = "%d/%m %H:%M";
+            }
+          ];
+        };
+      };
+    };
+  };
+
   xsession.enable = true;
 
   xsession.windowManager.i3 = {
@@ -16,43 +115,26 @@ in
 
       startup = [
         {
-          command = "feh --bg-fill ${wallpaper}";
+          command = "${randomWallpaperScript}";
           always = true;
         }
         {
           command = "ulauncher --hide-window";
           always = false;
         }
-        {
-          command = "xrandr --output HDMI-0 --mode 1920x1080 --rotate left --pos 0x0";
-          always = true;
-        }
-        {
-          command = "xrandr --output DP-0 --primary --mode 3440x1440 --rotate normal --pos 1080x0";
-          always = true;
-        }
-        {
-          command = "i3-msg 'workspace 1'";
-          always = true;
-        }
-        {
-          command = "i3-msg 'workspace 2'";
-          always = true;
-        }
-      ];
+      ]
+      ++ map (monitor: {
+        command = monitorCommand monitor;
+        always = true;
+      }) monitorLayouts
+      ++ map (workspace: {
+        command = "i3-msg 'workspace ${workspace.workspace}'";
+        always = true;
+      }) workspaceOutputAssign;
 
-      workspaceOutputAssign = [
-        {
-          workspace = "1";
-          output = "DP-0";
-        }
-        {
-          workspace = "2";
-          output = "HDMI-0";
-        }
-      ];
+      workspaceOutputAssign = workspaceOutputAssign;
 
-      keybindings = {
+      keybindings = workspaceBindings // {
         "${mod}+Return" = "exec rio";
         "${mod}+d" = "exec ulauncher-toggle";
 
@@ -65,28 +147,6 @@ in
 
         "${mod}+space" = "exec setxkbmap -layout us";
         "${mod}+Shift+space" = "exec setxkbmap -layout br";
-
-        "${mod}+1" = "workspace 1";
-        "${mod}+2" = "workspace 2";
-        "${mod}+3" = "workspace 3";
-        "${mod}+4" = "workspace 4";
-        "${mod}+5" = "workspace 5";
-        "${mod}+6" = "workspace 6";
-        "${mod}+7" = "workspace 7";
-        "${mod}+8" = "workspace 8";
-        "${mod}+9" = "workspace 9";
-        "${mod}+0" = "workspace 10";
-
-        "${mod}+Shift+1" = "move container to workspace 1";
-        "${mod}+Shift+2" = "move container to workspace 2";
-        "${mod}+Shift+3" = "move container to workspace 3";
-        "${mod}+Shift+4" = "move container to workspace 4";
-        "${mod}+Shift+5" = "move container to workspace 5";
-        "${mod}+Shift+6" = "move container to workspace 6";
-        "${mod}+Shift+7" = "move container to workspace 7";
-        "${mod}+Shift+8" = "move container to workspace 8";
-        "${mod}+Shift+9" = "move container to workspace 9";
-        "${mod}+Shift+0" = "move container to workspace 10";
 
         "${mod}+h" = "focus left";
         "${mod}+j" = "focus down";
