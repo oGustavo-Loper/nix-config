@@ -6,18 +6,18 @@ let
   workspaceKeys = [ "1" "2" "3" "4" "5" "6" "7" "8" "9" "0" ];
   monitorLayouts = [
     {
-      output = "HDMI-0";
-      mode = "1920x1080";
-      rotate = "left";
-      pos = "0x180";
-      primary = false;
-    }
-    {
       output = "DP-0";
       mode = "3440x1440";
       rotate = "normal";
       pos = "1080x0";
       primary = true;
+    }
+    {
+      output = "HDMI-0";
+      mode = "1920x1080";
+      rotate = "right";
+      pos = "0x180";
+      primary = false;
     }
   ];
   workspaceOutputAssign = [
@@ -41,12 +41,13 @@ let
       exec ${pkgs.feh}/bin/feh --bg-fill "$wallpaper"
     fi
   '';
-  monitorCommand =
+  monitorArgs =
     monitor:
     let
       primaryFlag = if monitor.primary then " --primary" else "";
     in
-    "xrandr --output ${monitor.output}${primaryFlag} --mode ${monitor.mode} --rotate ${monitor.rotate} --pos ${monitor.pos}";
+    "--output ${monitor.output}${primaryFlag} --mode ${monitor.mode} --rotate ${monitor.rotate} --pos ${monitor.pos}";
+  monitorsCommand = "xrandr " + lib.concatStringsSep " " (map monitorArgs monitorLayouts);
   workspaceBindings =
     builtins.listToAttrs (
       lib.flatten (
@@ -123,10 +124,10 @@ in
           always = false;
         }
       ]
-      ++ map (monitor: {
-        command = monitorCommand monitor;
+      ++ [{
+        command = monitorsCommand;
         always = true;
-      }) monitorLayouts
+      }]
       ++ map (workspace: {
         command = "i3-msg 'workspace ${workspace.workspace}'";
         always = true;

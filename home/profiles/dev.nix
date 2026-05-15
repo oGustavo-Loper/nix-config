@@ -3,7 +3,6 @@
 {
   home.packages = with pkgs; [
     git
-    neovim
     vim
     vscode
     nodejs_20
