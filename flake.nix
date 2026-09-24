@@ -10,37 +10,25 @@
     };
   };
 
-  outputs = { self, nixpkgs, home-manager }: {
-    nixosConfigurations = {
-
-      notebook = nixpkgs.lib.nixosSystem {
+  outputs = { self, nixpkgs, home-manager }:
+    let
+      mkSystem = host: nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
-          ./hosts/notebook/configuration.nix
+          ./hosts/${host}/configuration.nix
           home-manager.nixosModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-
             home-manager.users.gustavo = import ./home/gustavo.nix;
           }
         ];
       };
-
-      desktop = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        modules = [
-          ./hosts/desktop/configuration.nix
-          home-manager.nixosModules.home-manager
-          {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-
-            home-manager.users.gustavo = import ./home/gustavo.nix;
-          }
-        ];
+    in
+    {
+      nixosConfigurations = {
+        notebook = mkSystem "notebook";
+        desktop = mkSystem "desktop";
       };
-
     };
-  };
 }

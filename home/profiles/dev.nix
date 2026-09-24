@@ -5,10 +5,8 @@
     git
     vim
     vscode
-    nodejs_20
+    nodejs
     curl
-    docker
-    libvirt
     claude-code
   ];
 }

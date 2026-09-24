@@ -8,7 +8,8 @@ in
     [
       ./i3
       ./nvim
-      ./profiles/workstation.nix
+      ./profiles/productivity.nix
+      ./profiles/virtualization.nix
       ./profiles/dev.nix
     ]
     ++ lib.optionals (hostName == "desktop") [
